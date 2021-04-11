@@ -1,5 +1,6 @@
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import java.util.Objects;
 
 public class Calendar {
 
@@ -30,5 +31,13 @@ public class Calendar {
 
     public void setWorkingHours(TimeInterval workingHours) {
         this.workingHours = workingHours;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Calendar calendar = (Calendar) o;
+        return Objects.equals(workingHours, calendar.workingHours) && Objects.equals(plannedMeeting, calendar.plannedMeeting);
     }
 }
