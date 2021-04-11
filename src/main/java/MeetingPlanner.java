@@ -17,23 +17,23 @@ public class MeetingPlanner {
         ArrayList<TimeInterval> availableMeetings = new ArrayList<>();
         if (plannedMeetings.size() > 0) {
             TimeInterval firstInterval = new TimeInterval(workingHours.getStart(), plannedMeetings.first().getStart());
-            availableMeetings.addAll(getMeetingsBetween(firstInterval, duration));
+            availableMeetings.addAll(getMeetingsBetween(firstInterval, duration, workingHours));
             Iterator<TimeInterval> iterator = plannedMeetings.iterator();
             TimeInterval meeting = iterator.next();
 
             while (iterator.hasNext()) {
                 TimeInterval nextMeeting = iterator.next();
                 TimeInterval between = new TimeInterval(meeting.getEnd(), nextMeeting.getStart());
-                availableMeetings.addAll(getMeetingsBetween(between, duration));
+                availableMeetings.addAll(getMeetingsBetween(between, duration, workingHours));
                 meeting = nextMeeting;
             }
 
             TimeInterval lastMeeting = plannedMeetings.last();
             TimeInterval lastInterval = new TimeInterval(lastMeeting.getEnd(), workingHours.getEnd());
-            availableMeetings.addAll(getMeetingsBetween(lastInterval, duration));
+            availableMeetings.addAll(getMeetingsBetween(lastInterval, duration, workingHours));
         } else {
             TimeInterval workingHoursInterval = new TimeInterval(workingHours.getStart(), workingHours.getEnd());
-            availableMeetings.addAll(getMeetingsBetween(workingHoursInterval, duration));
+            availableMeetings.addAll(getMeetingsBetween(workingHoursInterval, duration, workingHours));
         }
         return availableMeetings;
     }
@@ -43,7 +43,7 @@ public class MeetingPlanner {
         TimeInterval workingHours2 = calendar2.getWorkingHours();
 
         LocalTime start = workingHours1.getStart().isBefore(workingHours2.getStart()) ? workingHours2.getStart() : workingHours1.getStart();
-        LocalTime end = workingHours1.getEnd().isAfter(workingHours2.getStart()) ? workingHours2.getEnd() : workingHours1.getEnd();
+        LocalTime end = workingHours1.getEnd().isAfter(workingHours2.getEnd()) ? workingHours2.getEnd() : workingHours1.getEnd();
 
         if (start.isAfter(end)) {
             return null;
@@ -52,12 +52,23 @@ public class MeetingPlanner {
         }
     }
 
-    private static ArrayList<TimeInterval> getMeetingsBetween(TimeInterval time, Duration duration) {
+    private static ArrayList<TimeInterval> getMeetingsBetween(TimeInterval freeTime, Duration duration, TimeInterval workingHours) {
+        TimeInterval time = trimToWorkingHours(freeTime, workingHours);
         LocalTime meetingStart = time.getStart();
         if (meetingStart.plus(duration).isBefore(time.getEnd()) || meetingStart.plus(duration).equals(time.getEnd())) {
             return new ArrayList<>(Collections.singleton(new TimeInterval(meetingStart, time.getEnd())));
         } else {
             return new ArrayList<>();
         }
+    }
+
+    private static TimeInterval trimToWorkingHours(TimeInterval time, TimeInterval workingHours){
+        if(time.getStart().isBefore(workingHours.getStart())){
+            time.setStart(workingHours.getStart());
+        }
+        if(time.getEnd().isAfter(workingHours.getEnd())){
+            time.setEnd(workingHours.getEnd());
+        }
+        return time;
     }
 }
